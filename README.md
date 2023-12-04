@@ -12,35 +12,44 @@
 package main
 
 import (
-	"context"
-	"github.com/itzloop/gograce"
-	"time"
+    "context"
+    "github.com/itzloop/gograce"
+    "time"
 )
 
 func main() {
-	grace := gograce.NewGraceful(gograce.Options{
-		Timeout:       10 * time.Second,
-		NoForceQuit:   false,
-		MaxGoRoutines: 0,
-		Signals:       nil,
-	})
+    grace := gograce.NewGraceful(gograce.Options{
+        // Timeout sets a hard deadline for cleanup phase. If time out is specified, 
+        // gograce will wait for that amount and then terminates forcefully
+        Timeout:       10 * time.Second,
 
-	app := App{}
-	grace.GoWithContext(app.Start)
-	grace.GoWithContext(app.Close)
-	grace.FatalWait()
+        // This controls whether or not sending terminate signal twice will forcefully
+        // terminate the application
+        NoForceQuit:   false,
+
+        // Setting this will limit the number of go-routines running at the same time.
+        MaxGoRoutines: 0,
+
+        // Setting this will overwrite the default signals
+        Signals:       nil,
+    })
+
+    app := App{}
+    grace.GoWithContext(app.Start)
+    grace.GoWithContext(app.Close)
+    grace.FatalWait()
 }
 
 type App struct{}
 
 func (app *App) Start(ctx context.Context) error {
-	// run stuff
+    // run stuff
 }
 
 
 func (app *App) Close(ctx context.Context) error {
-	<-ctx.Done()
-	// do cleanup
+    <-ctx.Done()
+    // do cleanup
 }
 ```
 

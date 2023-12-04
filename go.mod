@@ -1,4 +1,4 @@
-module github.com/itzloop/gograceful
+module github.com/itzloop/gograce
 
 go 1.21.2
 

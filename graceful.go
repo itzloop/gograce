@@ -1,4 +1,4 @@
-package gograceful
+package gograce
 
 import (
 	"context"

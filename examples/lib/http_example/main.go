@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"errors"
-	"github.com/itzloop/gograceful"
+	"github.com/itzloop/gograce"
 	"log"
 	"net"
 	"net/http"
@@ -12,7 +12,7 @@ import (
 
 func main() {
 	// create a grace instance
-	grace := gograceful.NewGraceful(gograceful.Options{
+	grace := gograce.NewGraceful(gograce.Options{
 		Timeout:       15 * time.Second, // wait 15 seconds and forcefully terminate the application
 		NoForceQuit:   false,            // by pressing Ctrl+C twice, app will terminate immediately
 		MaxGoRoutines: 0,                // set no limit for the number of go-routines running at the same time

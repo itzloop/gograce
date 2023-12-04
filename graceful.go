@@ -2,15 +2,12 @@ package gograce
 
 import (
 	"context"
-	"golang.org/x/sync/errgroup"
 	"log"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
-)
 
-var defaultSignals = [...]os.Signal{syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP}
+	"golang.org/x/sync/errgroup"
+)
 
 type Options struct {
 	// Timeout defines how long should the program wait before forcefully exiting.
@@ -29,6 +26,7 @@ type Options struct {
 	// Signals let's you overwrite graceful.defaultSignals.
 	// a zero-value or an empty slice indicate no overwrite
 	Signals []os.Signal
+
 }
 
 type Graceful struct {
@@ -37,6 +35,8 @@ type Graceful struct {
 	// TODO instead i'd like to do g.Go(f)
 	ctx context.Context
 	g   *errgroup.Group
+	sh *SignalHandler
+	th *TimeoutHandler
 }
 
 // NewGraceful calls NewGracefulWithContext with context.Background()
@@ -56,10 +56,11 @@ func NewGracefulWithContext(ctx context.Context, opts Options) *Graceful {
 		signals = opts.Signals
 	}
 
-	ctx = graceful.signalHandler(ctx, !opts.NoForceQuit, signals)
+	// Create signal handler
+	graceful.sh, ctx = NewSignalHandlerWithSignals(ctx, !opts.NoForceQuit, signals...)
 
 	if opts.Timeout != 0 {
-		go graceful.timeoutHandler(ctx, opts.Timeout)
+		 graceful.th = NewTimeoutHandler(ctx, opts.Timeout)
 	}
 
 	g, ctx = errgroup.WithContext(ctx)
@@ -72,35 +73,6 @@ func NewGracefulWithContext(ctx context.Context, opts Options) *Graceful {
 	graceful.ctx = ctx
 
 	return graceful
-}
-
-func (grace *Graceful) signalHandler(ctx context.Context, force bool, signals []os.Signal) context.Context {
-	ctx, cancel := context.WithCancel(ctx)
-	go func() {
-		sig := make(chan os.Signal, 1)
-		signal.Notify(sig, signals...)
-		s := <-sig
-		log.Printf("received signal '%s', gracefully quitting...", s) // TODO logging
-		cancel()                                                      // instead of calling close directly we call context.CancelFunc when a signal is received
-
-		if force {
-			s = <-sig                                                     // listen again to force quit
-			log.Printf("received signal '%s', forcefully quitting...", s) // TODO logging
-			os.Exit(1)                                                    // forcefully terminate the program
-		}
-	}()
-
-	return ctx
-}
-
-func (grace *Graceful) timeoutHandler(ctx context.Context, timeout time.Duration) {
-	<-ctx.Done() // make sure we are in termination phase
-
-	// create a timer to be able to handle timeouts
-	time.AfterFunc(timeout, func() {
-		log.Println("timeoutHandler: cleanup phase timeout reached, forcefully quitting...")
-		os.Exit(1)
-	})
 }
 
 func (grace *Graceful) GoWithContext(f func(ctx context.Context) error) {

@@ -28,13 +28,13 @@ func TestGracefulForce(t *testing.T) {
 	})
 
 	grace.GoWithContext(func(ctx context.Context) error {
-        time.Sleep(100 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		ended = true
 		return nil
 	})
 
 	wg.Add(1)
-	grace.sh.forceHandler = func() {
+	grace.sh.forceFunc = func() {
 		defer wg.Done()
 		forceHanlerCalled = true
 	}
@@ -64,12 +64,14 @@ func TestGracefulTimeout(t *testing.T) {
 	)
 
 	grace.GoWithContext(func(ctx context.Context) error {
+		<-ctx.Done()
 		started = true
 		return nil
 	})
 
 	grace.GoWithContext(func(ctx context.Context) error {
-        time.Sleep(100 * time.Millisecond)
+		<-ctx.Done()
+		time.Sleep(10 * time.Second)
 		ended = true
 		return nil
 	})
@@ -101,17 +103,16 @@ func TestGraceful(t *testing.T) {
 	var (
 		started bool
 		ended   bool
-		wg      = sync.WaitGroup{}
 	)
 
 	grace.GoWithContext(func(ctx context.Context) error {
+		<-ctx.Done()
 		started = true
 		return nil
 	})
 
-	wg.Add(1)
 	grace.GoWithContext(func(ctx context.Context) error {
-		defer wg.Done()
+		<-ctx.Done()
 		ended = true
 		return nil
 	})
@@ -120,9 +121,40 @@ func TestGraceful(t *testing.T) {
 		grace.sh.sigChan <- syscall.SIGINT
 	}()
 
-	wg.Wait()
+	grace.Wait()
 
 	assert.True(t, started)
 	assert.True(t, ended)
 
+}
+
+func TestGracefulAppExits(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	grace := NewGracefulWithContext(ctx, Options{
+		Timeout:     1 * time.Second,
+		NoForceQuit: false,
+	})
+
+	var (
+		started bool
+		ended   bool
+	)
+
+	grace.GoWithContext(func(ctx context.Context) error {
+		defer cancel()
+		time.Sleep(100 * time.Millisecond)
+		started = true
+		return nil
+	})
+
+	grace.GoWithContext(func(ctx context.Context) error {
+		<-ctx.Done()
+		ended = true
+		return nil
+	})
+
+	grace.Wait()
+
+	assert.True(t, started)
+	assert.True(t, ended)
 }

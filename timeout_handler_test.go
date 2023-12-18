@@ -10,21 +10,23 @@ import (
 )
 
 func TestTimeoutHandler(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	th := NewTimeoutHandler(ctx, 10*time.Microsecond)
-
 	var (
 		timeoutFuncCalled bool
-        wg = sync.WaitGroup{}
+		wg                = sync.WaitGroup{}
+		timeoutFunc       = func() {
+			defer wg.Done()
+			timeoutFuncCalled = true
+		}
 	)
 
-    wg.Add(1)
-	th.timeoutFunc = func() {
-        defer wg.Done()
-		timeoutFuncCalled = true
-	}
+	ctx, cancel := context.WithCancel(context.Background())
+	NewTimeoutHandlerWithTimeoutFunc(ctx, 10*time.Microsecond, timeoutFunc)
+
+	wg.Add(1)
 
 	cancel()
-    wg.Wait()
+
+	wg.Wait()
+
 	assert.True(t, timeoutFuncCalled)
 }

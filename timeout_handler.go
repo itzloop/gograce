@@ -7,16 +7,22 @@ import (
 	"time"
 )
 
+type TimeoutFunc func()
+
 type TimeoutHandler struct {
 	timeout time.Duration
 
-	// THIS IS FOR TESTING PURPOSES. normally this will be just os.Exit(1)
-    timeoutFunc func()
+	timeoutFunc TimeoutFunc
 }
 
 func NewTimeoutHandler(ctx context.Context, timeout time.Duration) *TimeoutHandler {
+    return NewTimeoutHandlerWithTimeoutFunc(ctx, timeout, defaultTimeoutFunc)
+}
+
+func NewTimeoutHandlerWithTimeoutFunc(ctx context.Context, timeout time.Duration, timeoutFunc TimeoutFunc) *TimeoutHandler {
 	th := &TimeoutHandler{
-		timeout: timeout,
+		timeout:     timeout,
+		timeoutFunc: timeoutFunc,
 	}
 
 	go th.start(ctx)
@@ -30,10 +36,10 @@ func (th *TimeoutHandler) start(ctx context.Context) {
 	// create a timer to be able to handle timeouts
 	time.AfterFunc(th.timeout, func() {
 		log.Println("timeoutHandler: cleanup phase timeout reached, forcefully quitting...")
-        if th.timeoutFunc != nil {
-            th.timeoutFunc()
-        } else {
-            os.Exit(1)
-        }
+		th.timeoutFunc()
 	})
+}
+
+func defaultTimeoutFunc() {
+	os.Exit(1)
 }

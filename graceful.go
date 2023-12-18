@@ -26,7 +26,6 @@ type Options struct {
 	// Signals let's you overwrite graceful.defaultSignals.
 	// a zero-value or an empty slice indicate no overwrite
 	Signals []os.Signal
-
 }
 
 type Graceful struct {
@@ -35,8 +34,8 @@ type Graceful struct {
 	// TODO instead i'd like to do g.Go(f)
 	ctx context.Context
 	g   *errgroup.Group
-	sh *SignalHandler
-	th *TimeoutHandler
+	sh  *SignalHandler
+	th  *TimeoutHandler
 }
 
 // NewGraceful calls NewGracefulWithContext with context.Background()
@@ -57,10 +56,13 @@ func NewGracefulWithContext(ctx context.Context, opts Options) *Graceful {
 	}
 
 	// Create signal handler
-	graceful.sh, ctx = NewSignalHandlerWithSignals(ctx, !opts.NoForceQuit, signals...)
+    graceful.sh, ctx = NewSignalHandler(ctx, SignalHandlerOptions{
+    	Force:   !opts.NoForceQuit,
+    	Signals: signals,
+    })
 
 	if opts.Timeout != 0 {
-		 graceful.th = NewTimeoutHandler(ctx, opts.Timeout)
+		graceful.th = NewTimeoutHandler(ctx, opts.Timeout)
 	}
 
 	g, ctx = errgroup.WithContext(ctx)

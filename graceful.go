@@ -43,6 +43,8 @@ func NewGraceful(opts Options) *Graceful {
 	return NewGracefulWithContext(context.Background(), opts)
 }
 
+// NewGracefulWithContext will create a SignalHandler and a TimeoutHandler
+// which are started automatically.
 func NewGracefulWithContext(ctx context.Context, opts Options) *Graceful {
 	var (
 		g        *errgroup.Group
@@ -56,13 +58,15 @@ func NewGracefulWithContext(ctx context.Context, opts Options) *Graceful {
 	}
 
 	// Create signal handler
-    graceful.sh, ctx = NewSignalHandler(ctx, SignalHandlerOptions{
-    	Force:   !opts.NoForceQuit,
-    	Signals: signals,
-    })
+	graceful.sh, ctx = NewSignalHandler(ctx, SignalHandlerOptions{
+		Force:   !opts.NoForceQuit,
+		Signals: signals,
+	})
 
 	if opts.Timeout != 0 {
-		graceful.th = NewTimeoutHandler(ctx, opts.Timeout)
+		graceful.th = NewTimeoutHandler(ctx, TimeoutHandlerOptions{
+			Timeout: opts.Timeout,
+		})
 	}
 
 	g, ctx = errgroup.WithContext(ctx)
@@ -77,19 +81,26 @@ func NewGracefulWithContext(ctx context.Context, opts Options) *Graceful {
 	return graceful
 }
 
+// GoWithContext is convenient wrapper for (*errgroup.Group).Go that
+// accepts a functions that takes a context as input instead of not
+// having any input.
 func (grace *Graceful) GoWithContext(f func(ctx context.Context) error) {
 	grace.g.Go(func() error {
 		return f(grace.ctx)
 	})
 }
+
+// Go calls (*errgroup.Group).Go() internally
 func (grace *Graceful) Go(f func() error) {
 	grace.g.Go(f)
 }
 
+// Wait calls (*errgroup.Group).Wait() and returns the error
 func (grace *Graceful) Wait() error {
 	return grace.g.Wait()
 }
 
+// FatalWait calls Wait but log.Fatals when an error is received
 func (grace *Graceful) FatalWait() {
 	if err := grace.Wait(); err != nil {
 		log.Fatalln(err.Error())

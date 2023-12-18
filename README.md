@@ -53,8 +53,14 @@ func (app *App) Close(ctx context.Context) error {
 }
 ```
 
-For more information on how to use it refer to [examples](./examples/README.md) readme.
+For more information on how to use it refer to [examples](/examples/README.md) readme.
 
 ## Testing
+
+```golang
+$ go run -v ./...
+```
+
+## Contributing
 
 TODO

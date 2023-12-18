@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTimeoutHandler(t *testing.T) {
@@ -20,13 +20,16 @@ func TestTimeoutHandler(t *testing.T) {
 	)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	NewTimeoutHandlerWithTimeoutFunc(ctx, 10*time.Microsecond, timeoutFunc)
 
 	wg.Add(1)
+	NewTimeoutHandler(ctx, TimeoutHandlerOptions{
+		Timeout:     100 * time.Millisecond,
+		TimeoutFunc: timeoutFunc,
+	})
 
 	cancel()
 
 	wg.Wait()
 
-	assert.True(t, timeoutFuncCalled)
+	require.True(t, timeoutFuncCalled)
 }

@@ -3,7 +3,8 @@
 
 ![Red Sus](./.github/sus.png)
 
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/itzloop/gograce/test.yml)
+![GitHub License](https://img.shields.io/github/license/itzloop/gograce)
 [![Go Report Card](https://goreportcard.com/badge/github.com/itzloop/gograce)](https://goreportcard.com/report/github.com/itzloop/gograce)
 [![PkgGoDev](https://pkg.go.dev/badge/mod/github.com/itzloop/gograce)](https://pkg.go.dev/mod/github.com/itzloop/gograce)
 

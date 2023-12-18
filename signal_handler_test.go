@@ -133,11 +133,11 @@ func TestSignalHandler(t *testing.T) {
 			wg          = sync.WaitGroup{}
 		)
 
-        wg.Add(1)
+		wg.Add(1)
 		sh, _ := NewSignalHandler(context.Background(), SignalHandlerOptions{
 			Force: true,
 			ForceFunc: func() {
-                defer wg.Done()
+				defer wg.Done()
 				forceCalled = true
 			},
 		})
@@ -151,7 +151,7 @@ func TestSignalHandler(t *testing.T) {
 
 		sh.sigChan <- syscall.SIGINT
 		sh.sigChan <- syscall.SIGINT
-        wg.Wait()
+		wg.Wait()
 
 		require.False(t, sh.started.Load())
 		require.True(t, forceCalled)

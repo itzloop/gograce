@@ -20,7 +20,7 @@ func main() {
 	})
 
 	// create a simple http server
-	exampleHTTPServer := NewExampleHTTPServer(":8080")
+	exampleHTTPServer := NewExampleHTTPServer(":8000")
 
 	// add start and close operations to grace instance
 	grace.GoWithContext(exampleHTTPServer.start)

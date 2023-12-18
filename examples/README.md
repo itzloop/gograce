@@ -18,3 +18,15 @@ These are the examples used in the blog post
 Creates a simples http.Server with:
 - `/long-running-job` that sleeps for 10 seconds to demonstrate all active connections will finish before termination.
 - `/hello` that will write `hi` back :).
+
+### Running the example
+
+```bash
+$ go run examples/lib/http_example/main.go
+```
+
+You now have a HTTP server that has to endpoints:
+1. `/hello` which simply writes `hi` back.
+2. `log-runing-job` which is simple `time.Sleep` and then writes `done` back.
+
+Now when you send a HTTP request to `/log-running-job`, and press `ctrl+c` in server, the code will wait for all requests to finish and then terminates.

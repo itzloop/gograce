@@ -57,8 +57,8 @@ For more information on how to use it refer to [examples](/examples/README.md) r
 
 ## Testing
 
-```golang
-$ go run -v ./...
+```bash
+$ go test -v ./...
 ```
 
 ## Contributing
